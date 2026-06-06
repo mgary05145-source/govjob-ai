@@ -1,0 +1,248 @@
+-- Create database
+CREATE DATABASE IF NOT EXISTS govjob_db;
+USE govjob_db;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS `User` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NULL,
+  `email` VARCHAR(255) NULL UNIQUE,
+  `password` VARCHAR(500) NULL,
+  `googleId` VARCHAR(255) NULL UNIQUE,
+  `avatar` VARCHAR(500) NULL,
+  `qualification` VARCHAR(100) NULL,
+  `state` VARCHAR(100) NULL,
+  `interests` VARCHAR(500) NULL,
+  `availableStudyTime` INTEGER NULL DEFAULT 0,
+  `age` INTEGER NULL,
+  `studyStreak` INTEGER NOT NULL DEFAULT 0,
+  `longestStreak` INTEGER NOT NULL DEFAULT 0,
+  `totalStudyHours` DOUBLE NOT NULL DEFAULT 0,
+  `todayStudyMinutes` INTEGER NOT NULL DEFAULT 0,
+  `weeklyStudyMinutes` INTEGER NOT NULL DEFAULT 0,
+  `monthlyStudyMinutes` INTEGER NOT NULL DEFAULT 0,
+  `xpPoints` INTEGER NOT NULL DEFAULT 0,
+  `level` INTEGER NOT NULL DEFAULT 1,
+  `lastStudyDate` DATETIME NULL,
+  `streakFreeze` INTEGER NOT NULL DEFAULT 0,
+  `createdAt` TIMESTAMP(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` TIMESTAMP(6) NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Jobs table
+CREATE TABLE IF NOT EXISTS `Job` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(500) NOT NULL,
+  `organization` VARCHAR(500) NOT NULL,
+  `category` VARCHAR(100) NOT NULL,
+  `subcategory` VARCHAR(100) NULL,
+  `description` TEXT NULL,
+  `eligibility` TEXT NULL,
+  `ageLimit` VARCHAR(200) NULL,
+  `salary` VARCHAR(500) NULL,
+  `selectionProcess` TEXT NULL,
+  `examPattern` TEXT NULL,
+  `vacancies` VARCHAR(100) NULL,
+  `officialWebsite` VARCHAR(500) NULL,
+  `applyLink` VARCHAR(500) NULL,
+  `examDate` DATETIME NULL,
+  `lastDate` DATETIME NULL,
+  `cutoffs` TEXT NULL,
+  `previousYearTrends` TEXT NULL,
+  `importantDates` TEXT NULL,
+  `status` VARCHAR(50) NULL DEFAULT 'active',
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Study Plans table
+CREATE TABLE IF NOT EXISTS `StudyPlan` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `exam` VARCHAR(255) NOT NULL,
+  `examDate` DATETIME NOT NULL,
+  `planType` VARCHAR(50) NULL DEFAULT 'auto',
+  `planJson` JSON NOT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Notes table
+CREATE TABLE IF NOT EXISTS `Note` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `title` VARCHAR(500) NOT NULL,
+  `content` TEXT NOT NULL,
+  `subject` VARCHAR(100) NULL,
+  `tags` VARCHAR(500) NULL,
+  `color` VARCHAR(50) NULL DEFAULT 'blue',
+  `isPinned` TINYINT(1) NOT NULL DEFAULT 0,
+  `aiSummary` TEXT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Study Sessions table
+CREATE TABLE IF NOT EXISTS `StudySession` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `duration` INTEGER NOT NULL,
+  `type` VARCHAR(50) NULL DEFAULT 'pomodoro',
+  `subject` VARCHAR(100) NULL,
+  `focusScore` INTEGER NULL DEFAULT 0,
+  `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Mock Tests table
+CREATE TABLE IF NOT EXISTS `MockTest` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) NOT NULL,
+  `subject` VARCHAR(100) NULL,
+  `category` VARCHAR(100) NULL,
+  `duration` INTEGER NOT NULL DEFAULT 60,
+  `totalMarks` INTEGER NOT NULL DEFAULT 100,
+  `totalQuestions` INTEGER NOT NULL DEFAULT 50,
+  `questions` JSON NOT NULL,
+  `isSectional` TINYINT(1) NOT NULL DEFAULT 0,
+  `isPreviousYear` TINYINT(1) NOT NULL DEFAULT 0,
+  `difficulty` VARCHAR(50) NULL DEFAULT 'medium',
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Test Results table
+CREATE TABLE IF NOT EXISTS `TestResult` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `testId` INTEGER NOT NULL,
+  `score` INTEGER NOT NULL,
+  `totalMarks` INTEGER NOT NULL,
+  `correctAnswers` INTEGER NOT NULL,
+  `incorrectAnswers` INTEGER NOT NULL,
+  `unanswered` INTEGER NOT NULL,
+  `timeTaken` INTEGER NOT NULL,
+  `subjectWiseScores` JSON NULL,
+  `answers` JSON NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Streak History table
+CREATE TABLE IF NOT EXISTS `StreakHistory` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `date` DATETIME NOT NULL,
+  `studied` TINYINT(1) NOT NULL DEFAULT 0,
+  `minutes` INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `StreakHistory_userId_date_key` (`userId`, `date`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Revision Plans table
+CREATE TABLE IF NOT EXISTS `RevisionPlan` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `planType` VARCHAR(50) NOT NULL,
+  `planJson` JSON NOT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Weak Areas table
+CREATE TABLE IF NOT EXISTS `WeakArea` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `subject` VARCHAR(100) NOT NULL,
+  `topic` VARCHAR(255) NULL,
+  `score` DOUBLE NULL,
+  `suggestions` TEXT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Achievements table
+CREATE TABLE IF NOT EXISTS `Achievement` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `badge` VARCHAR(100) NOT NULL,
+  `description` TEXT NOT NULL,
+  `xpRewarded` INTEGER NOT NULL DEFAULT 0,
+  `unlockedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS `Notification` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `type` VARCHAR(50) NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `message` TEXT NOT NULL,
+  `isRead` TINYINT(1) NOT NULL DEFAULT 0,
+  `link` VARCHAR(500) NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Bookmarks table
+CREATE TABLE IF NOT EXISTS `Bookmark` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `type` VARCHAR(50) NOT NULL,
+  `referenceId` INTEGER NOT NULL,
+  `title` VARCHAR(255) NULL,
+  `url` VARCHAR(500) NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Current Affairs table
+CREATE TABLE IF NOT EXISTS `CurrentAffair` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(500) NOT NULL,
+  `description` TEXT NULL,
+  `category` VARCHAR(100) NULL,
+  `date` DATETIME NOT NULL,
+  `source` VARCHAR(255) NULL,
+  `url` VARCHAR(500) NULL,
+  `tags` VARCHAR(500) NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Chat History table
+CREATE TABLE IF NOT EXISTS `ChatHistory` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `userId` INTEGER NOT NULL,
+  `message` TEXT NOT NULL,
+  `response` TEXT NOT NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Syllabus table
+CREATE TABLE IF NOT EXISTS `Syllabus` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `exam` VARCHAR(255) NOT NULL,
+  `subject` VARCHAR(255) NOT NULL,
+  `topic` VARCHAR(500) NOT NULL,
+  `subtopics` TEXT NULL,
+  `weightage` DOUBLE NULL,
+  `difficulty` VARCHAR(50) NULL DEFAULT 'medium',
+  `orderIndex` INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
