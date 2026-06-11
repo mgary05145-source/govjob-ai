@@ -44,6 +44,7 @@ export default function NotesSystem() {
   const [subjectFilter, setSubjectFilter] = useState('All');
   const [showEditor, setShowEditor] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [newNote, setNewNote] = useState({ title: '', content: '', subject: 'General Studies', tags: '', color: 'blue' });
 
   const filtered = notes.filter(n => {
@@ -120,7 +121,7 @@ export default function NotesSystem() {
       </div>
 
       {showEditor && (
-        <motion.div initial={{ opacity: 0, y: -20 }} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 mb-6">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 mb-6">
           <input type="text" placeholder="Note title..." value={newNote.title} onChange={(e) => setNewNote({ ...newNote, title: e.target.value })} className="w-full text-lg font-bold bg-transparent border-b border-slate-200 dark:border-slate-700 pb-2 mb-4 outline-none" />
           <textarea placeholder="Start writing your note..." value={newNote.content} onChange={(e) => setNewNote({ ...newNote, content: e.target.value })} className="w-full min-h-[200px] bg-transparent border border-slate-200 dark:border-slate-700 rounded-lg p-4 outline-none text-sm mb-4 resize-none" />
           <div className="flex flex-wrap gap-4 mb-4">
@@ -138,7 +139,29 @@ export default function NotesSystem() {
           </div>
         </motion.div>
       )}
-
+  {viewingNote && (
+  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setViewingNote(null)}>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{viewingNote.subject}</span>
+        <button onClick={() => setViewingNote(null)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+      <h2 className="text-xl font-bold mb-3">{viewingNote.title}</h2>
+      <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed">{viewingNote.content}</p>
+      {viewingNote.tags && (
+        <div className="flex gap-1 flex-wrap mt-4">
+          {viewingNote.tags.split(',').map((t, i) => (
+            <span key={i} className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full text-slate-500">{t.trim()}</span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2 mt-6">
+        <button onClick={() => { setEditingNote(viewingNote); setNewNote({ title: viewingNote.title, content: viewingNote.content, subject: viewingNote.subject, tags: viewingNote.tags, color: viewingNote.color }); setShowEditor(true); setViewingNote(null); }} className="btn-primary text-sm py-2">Edit Note</button>
+        <button onClick={() => setViewingNote(null)} className="text-sm py-2 px-4 rounded-lg border border-slate-200 dark:border-slate-700">Close</button>
+      </div>
+    </div>
+  </div>
+)}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {sorted.length === 0 ? (
           <div className="col-span-full text-center py-12 text-slate-500">
@@ -146,7 +169,7 @@ export default function NotesSystem() {
             <p>No notes yet. Create your first note!</p>
           </div>
         ) : sorted.map((note, i) => (
-          <motion.div key={note.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl border-l-4 ${COLOR_MAP[note.color] || 'border-l-blue-500'} p-4 hover:shadow-md transition-all`}>
+          <motion.div key={note.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} onClick={() => setViewingNote(note)} className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl border-l-4 ${COLOR_MAP[note.color] || 'border-l-blue-500'} p-4 hover:shadow-md transition-all cursor-pointer`}>
             <div className="flex items-start justify-between mb-2">
               <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{note.subject}</span>
               <div className="flex gap-1">

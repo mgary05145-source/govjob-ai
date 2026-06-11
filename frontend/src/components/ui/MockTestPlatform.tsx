@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Clock, BarChart3, CheckCircle2, XCircle, AlertTriangle, Play, RotateCcw, ChevronRight, Loader2, Award, BookOpen, Brain, Target } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -86,7 +86,7 @@ export default function MockTestPlatform() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
 
-  const filtered = tests.filter(t => {
+  const filtered = (tests.length > 0 ? tests : SAMPLE_TESTS).filter(t => {
     if (filterCat !== 'All' && t.category !== filterCat) return false;
     if (filterSubj !== 'All' && t.subject !== filterSubj) return false;
     return true;
@@ -105,23 +105,38 @@ export default function MockTestPlatform() {
     return (SAMPLE_QUESTIONS[test.subject] || SAMPLE_QUESTIONS['General Awareness']).slice(0, test.totalQuestions);
   };
 
+  const answersRef = useRef<Record<number, number>>({});
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  const timeLeftRef = useRef(0);
+useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
+
   const startTest = (test: Test) => {
     const populated = { ...test, questions: generateQuestionsForTest(test) };
     setActiveTest(populated);
     setCurrentQ(0);
     setAnswers({});
+    answersRef.current = {};
     setSubmitted(false);
     setResult(null);
     setTimeLeft(populated.duration * 60);
     setTimerActive(true);
+  };
 
-    const timer = setInterval(() => {
+  useEffect(() => {
+    if (!timerActive || !activeTest) return;
+    const id = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearInterval(timer); setTimerActive(false); handleSubmit(answers, populated); return 0; }
+        if (prev <= 1) {
+          clearInterval(id);
+          setTimerActive(false);
+          handleSubmit(answersRef.current, activeTest);
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
-  };
+    return () => clearInterval(id);
+  }, [timerActive, activeTest]);
 
   const selectAnswer = (qIndex: number, optIndex: number) => {
     setAnswers(prev => ({ ...prev, [qIndex]: optIndex }));
@@ -145,21 +160,25 @@ export default function MockTestPlatform() {
       }
     });
 
+    const totalAnswered = Object.keys(finalAnswers).length;
+    const wrong = totalAnswered - correct;
+    const notAnswered = questions.length - totalAnswered;
+
     const score = Math.round((correct / questions.length) * test.totalMarks);
 
     setResult({
       score,
       total: test.totalMarks,
       correct,
-      incorrect: questions.length - correct - Object.keys(finalAnswers).filter(k => finalAnswers[parseInt(k)] === undefined).length,
-      unanswered: questions.length - correct - (questions.length - correct - Object.keys(finalAnswers).filter(k => finalAnswers[parseInt(k)] === undefined).length),
+      incorrect: wrong,
+      unanswered: notAnswered,
       subjectWise,
       percentage: Math.round((correct / questions.length) * 100),
     });
-
+    
     if (user) {
       try {
-        await api.post(`/mock-tests/${test.id}/submit`, { answers: questions.map((_, i) => finalAnswers[i]), timeTaken: test.duration * 60 - timeLeft });
+        await api.post(`/mock-tests/${test.id}/submit`, { answers: questions.map((_, i) => finalAnswers[i]),timeTaken: test.duration * 60 - timeLeftRef.current });
       } catch {}
     }
   };
@@ -223,7 +242,7 @@ export default function MockTestPlatform() {
         </div>
 
         {submitted && result && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-slate-800 border-2 border-green-200 dark:border-green-700 rounded-xl p-6 mb-6">
+           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="bg-white dark:bg-slate-800 border-2 border-green-200 dark:border-green-700 rounded-xl p-6 mb-6">
             <div className="text-center mb-6">
               <Award className={`h-16 w-16 mx-auto mb-3 ${result.percentage >= 60 ? 'text-green-500' : result.percentage >= 40 ? 'text-yellow-500' : 'text-red-500'}`} />
               <h3 className="text-2xl font-bold">Your Score: {result.score}/{result.total}</h3>

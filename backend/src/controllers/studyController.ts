@@ -77,7 +77,7 @@ export const createStudyPlan = async (req: Request, res: Response) => {
     const userId = (req as any).user?.userId;
     if (userId) {
       await prisma.studyPlan.create({
-        data: { userId, exam, examDate: examDateObj, planJson: planJson as any },
+        data: { userId, exam, examDate: examDateObj, planJson: JSON.stringify(planJson) },
       });
     }
 

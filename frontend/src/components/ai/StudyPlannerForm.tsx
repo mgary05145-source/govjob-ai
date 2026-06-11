@@ -50,6 +50,7 @@ export default function StudyPlannerForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    alert("FORM SUBMITTED");
     if (!exam || !examDate) return;
     setIsLoading(true);
 
@@ -66,7 +67,7 @@ export default function StudyPlannerForm() {
     const daysLeft = Math.ceil((new Date(examDate).getTime() - Date.now()) / 86400000);
 
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} className="space-y-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
         <div className="bg-gradient-to-r from-primary to-blue-600 rounded-2xl p-8 text-white">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-5 w-5" />
@@ -127,7 +128,7 @@ export default function StudyPlannerForm() {
                       ))}
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-accent flex-shrink-0">{task.hours || task.hours}h</span>
+                    <span className="text-sm font-bold text-accent flex-shrink-0">{task.hours || task.duration || 0}h</span>
                 </div>
               ))}
             </div>

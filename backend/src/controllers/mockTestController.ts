@@ -89,11 +89,11 @@ export const submitTest = async (req: Request, res: Response) => {
     const test = await prisma.mockTest.findUnique({ where: { id: parseInt(req.params.id) } });
     if (!test) return res.status(404).json({ error: 'Test not found' });
 
-    const questions = test.questions as any[];
+    const questions = typeof test.questions === 'string' ? JSON.parse(test.questions) : test.questions as any[];
     let correct = 0;
     const subjectWise: Record<string, { total: number; correct: number }> = {};
 
-    questions.forEach((q, i) => {
+    questions.forEach((q: any, i: number) => {
       const sub = q.subject || 'General';
       if (!subjectWise[sub]) subjectWise[sub] = { total: 0, correct: 0 };
       subjectWise[sub].total++;
@@ -112,7 +112,8 @@ export const submitTest = async (req: Request, res: Response) => {
         userId, testId: test.id, score: Math.round(score), totalMarks: test.totalMarks,
         correctAnswers: correct, incorrectAnswers: incorrect, unanswered,
         timeTaken: timeTaken || test.duration,
-        subjectWiseScores: subjectWise as any, answers,
+        subjectWiseScores: JSON.stringify(subjectWise),
+        answers: JSON.stringify(answers),
       },
     });
 
@@ -125,11 +126,17 @@ export const submitTest = async (req: Request, res: Response) => {
       }));
 
     for (const wa of weakAreas) {
-      await prisma.weakArea.upsert({
-        where: { id: 0 },
-        update: { score: wa.score, suggestions: wa.suggestions },
-        create: wa,
+      const existing = await prisma.weakArea.findFirst({
+        where: { userId, subject: wa.subject },
       });
+      if (existing) {
+        await prisma.weakArea.update({
+          where: { id: existing.id },
+          data: { score: wa.score, suggestions: wa.suggestions },
+        });
+      } else {
+        await prisma.weakArea.create({ data: wa });
+      }
     }
 
     const xpEarned = correct * 5;

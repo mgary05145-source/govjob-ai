@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "description": "Backend for GovJob India AI",
   "main": "dist/index.js",
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "seed": "npx prisma db seed",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

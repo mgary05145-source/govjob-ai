@@ -35,30 +35,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const savedUser = localStorage.getItem('user');
+    if (token && savedUser) {
+      api.setToken(token);
+      try {
+        setUser(JSON.parse(savedUser));
+        api.get('/auth/me')
+          .then((data) => {
+            setUser(data);
+            localStorage.setItem('user', JSON.stringify(data));
+          })
+          .catch(() => {
+            // Keep cached user data, server might be down
+          });
+      } catch {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        api.setToken(null);
+      }
+    } else if (token) {
       api.setToken(token);
       api.get('/auth/me')
         .then((data) => {
           setUser(data);
+          localStorage.setItem('user', JSON.stringify(data));
         })
         .catch(() => {
           localStorage.removeItem('token');
           api.setToken(null);
         })
         .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
+      return;
     }
+    setIsLoading(false);
   }, []);
 
   const login = (token: string, userData: User) => {
     api.setToken(token);
     setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
     api.setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   const updateUser = (data: Partial<User>) => {

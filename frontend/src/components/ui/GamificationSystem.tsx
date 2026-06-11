@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Zap, Award, Target, Flame, Star, Medal, TrendingUp, Crown, Sparkles, Lock } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { api } from '@/lib/api';
 
 interface Badge {
   badge: string;
@@ -64,7 +66,20 @@ const LEADERBOARD = [
 ];
 
 export default function GamificationSystem() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'badges' | 'leaderboard'>('badges');
+  const [achievements, setAchievements] = useState<any[]>(MOCK_ACHIEVEMENTS);
+  const [leaderboard, setLeaderboard] = useState(LEADERBOARD);
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/gamification/achievements')
+  .then(data => setAchievements(Array.isArray(data) ? data : MOCK_ACHIEVEMENTS))
+  .catch(() => {});
+api.get('/gamification/leaderboard')
+  .then(data => setLeaderboard(Array.isArray(data) ? data : LEADERBOARD))
+  .catch(() => {});
+  }, [user]);
 
   return (
     <section className="py-12">
@@ -81,19 +96,39 @@ export default function GamificationSystem() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm text-slate-500">You are at</p>
-              <h3 className="text-xl font-bold">Level 3 - Dedicated Learner</h3>
-              <p className="text-sm text-slate-500 mt-1">1,250 XP earned</p>
+<h3 className="text-xl font-bold">
+  {(() => {
+    const xp = user?.xpPoints || 0;
+    const lvl = LEVELS.slice().reverse().find(l => xp >= l.xp) || LEVELS[0];
+    return `Level ${lvl.level} - ${lvl.title}`;
+  })()}
+</h3>
+<p className="text-sm text-slate-500 mt-1">{user?.xpPoints || 0} XP earned</p>
             </div>
             <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
               <Crown className="h-8 w-8 text-yellow-600" />
             </div>
           </div>
           <div className="h-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full" style={{ width: '42%' }}></div>
+            <div className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full" style={{ width: `${(() => {
+  const xp = user?.xpPoints || 0;
+  const curr = LEVELS.slice().reverse().find(l => xp >= l.xp) || LEVELS[0];
+  const next = LEVELS.find(l => l.xp > xp);
+  if (!next) return 100;
+  return Math.round(((xp - curr.xp) / (next.xp - curr.xp)) * 100);
+})()}%` }}></div>
           </div>
           <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>300 XP to Level 4</span>
-            <span>Next: Scholar</span>
+            <span>{(() => {
+  const xp = user?.xpPoints || 0;
+  const next = LEVELS.find(l => l.xp > xp);
+  return next ? `${next.xp - xp} XP to Level ${next.level}` : 'Max Level!';
+})()}</span>
+<span>{(() => {
+  const xp = user?.xpPoints || 0;
+  const next = LEVELS.find(l => l.xp > xp);
+  return next ? `Next: ${next.title}` : '🏆 Legend';
+})()}</span>
           </div>
         </div>
       </div>
@@ -110,7 +145,7 @@ export default function GamificationSystem() {
       {activeTab === 'badges' ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {ALL_BADGES.map((badge, i) => {
-            const unlocked = MOCK_ACHIEVEMENTS.find(a => a.badge === badge.badge);
+            const unlocked = achievements.find((a: any) => a.badge === badge.badge);
             return (
               <motion.div key={badge.badge} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={`relative p-4 rounded-xl border-2 text-center transition-all ${
                 unlocked ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-50'

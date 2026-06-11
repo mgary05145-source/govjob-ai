@@ -4,7 +4,54 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing data
-  await prisma.notification.deleteMany();
+  try {
+    await prisma.notification.deleteMany();
+  } catch {}
+  try {
+    await prisma.achievement.deleteMany();
+  } catch {}
+  try {
+    await prisma.weakArea.deleteMany();
+  } catch {}
+  try {
+    await prisma.revisionPlan.deleteMany();
+  } catch {}
+  try {
+    await prisma.streakHistory.deleteMany();
+  } catch {}
+  try {
+    await prisma.testResult.deleteMany();
+  } catch {}
+  try {
+    await prisma.studySession.deleteMany();
+  } catch {}
+  try {
+    await prisma.bookmark.deleteMany();
+  } catch {}
+  try {
+    await prisma.chatHistory.deleteMany();
+  } catch {}
+  try {
+    await prisma.currentAffair.deleteMany();
+  } catch {}
+  try {
+    await prisma.syllabus.deleteMany();
+  } catch {}
+  try {
+    await prisma.mockTest.deleteMany();
+  } catch {}
+  try {
+    await prisma.note.deleteMany();
+  } catch {}
+  try {
+    await prisma.studyPlan.deleteMany();
+  } catch {}
+  try {
+    await prisma.job.deleteMany();
+  } catch {}
+  try {
+    await prisma.user.deleteMany();
+  } catch {}
   await prisma.achievement.deleteMany();
   await prisma.weakArea.deleteMany();
   await prisma.revisionPlan.deleteMany();
@@ -173,7 +220,12 @@ async function main() {
   ];
 
   for (const test of mockTests) {
-    await prisma.mockTest.create({ data: test });
+    await prisma.mockTest.create({
+      data: {
+        ...test,
+        questions: JSON.stringify(test.questions),
+      },
+    });
   }
 
   console.log('Database seeded successfully!');

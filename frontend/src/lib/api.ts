@@ -28,18 +28,35 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-    const data = await response.json();
+      let data: any;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        try { data = JSON.parse(text); } catch { data = { error: text }; }
+      }
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Something went wrong');
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      return data;
+    } catch (error: any) {
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to server. Please ensure the backend is running.');
+      }
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
+      }
+      throw error;
     }
-
-    return data;
   }
 
   async get(endpoint: string) {

@@ -28,7 +28,7 @@ export default function StudyDashboard() {
 
     api.get('/dashboard')
       .then(setData)
-      .catch(() => setData(getMockDashboard()))
+      .catch(() => setData({}))
       .finally(() => setLoading(false));
   }, [user]);
 

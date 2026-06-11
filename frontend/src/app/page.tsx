@@ -87,7 +87,7 @@ export default function LandingPage() {
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-wrap justify-center gap-4">
-                <a href="#ai-engine" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-10 rounded-xl text-lg shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all flex items-center gap-2">
+                <a href="/signup" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-10 rounded-xl text-lg shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all flex items-center gap-2">
                   Start Free <ArrowRight className="h-5 w-5" />
                 </a>
                 <a href="#features" className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-bold py-4 px-10 rounded-xl text-lg border border-white/20 transition-all">

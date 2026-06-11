@@ -50,7 +50,7 @@ export const getDashboard = async (req: Request, res: Response) => {
     const subjectWisePerformance: Record<string, { total: number; correct: number }> = {};
     recentResults.forEach(r => {
       if (r.subjectWiseScores) {
-        const sws = r.subjectWiseScores as Record<string, any>;
+        const sws = typeof r.subjectWiseScores === 'string' ? JSON.parse(r.subjectWiseScores) : r.subjectWiseScores as Record<string, any>;
         Object.entries(sws).forEach(([subject, data]: [string, any]) => {
           if (!subjectWisePerformance[subject]) subjectWisePerformance[subject] = { total: 0, correct: 0 };
           subjectWisePerformance[subject].total += data.total || 0;
